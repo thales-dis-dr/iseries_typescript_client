@@ -1,0 +1,9 @@
+{
+  "devices": [
+    {
+      "ip": "",
+      "apiId": "test",
+      "apiKey": "test"
+    }
+  ]
+}
