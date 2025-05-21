@@ -1,6 +1,6 @@
 import JSON5 from "json5";
 import fs from "fs/promises";
-import { type SettingsMessageLike } from "./drmcl/settingsMessage.mts";
+import type { DeviceSettingsLike } from "./drmcl/index.mts";
 
 async function load_json_file(path: string) {
   let content = (await fs.readFile(path)).toString();
@@ -96,7 +96,7 @@ type ConfigLike = Partial<Config> & Required<Pick<Config, "devices">>;
 export class Config {
   constant_capture?: boolean;
   ca_cert_path?: string;
-  settings?: SettingsMessageLike;
+  settings?: DeviceSettingsLike;
   devices: DeviceConfig[];
 
   async get_ca_cert() {
@@ -108,7 +108,7 @@ export class Config {
 
   constructor(
     constant_capture: boolean | undefined | null,
-    settings: SettingsMessageLike | undefined | null,
+    settings: DeviceSettingsLike | undefined | null,
     devices: DeviceConfig[] | undefined | null,
     ca_cert_path: string | undefined | null
   ) {

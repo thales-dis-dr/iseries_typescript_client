@@ -1,16 +1,15 @@
 import { DeviceConfig, load_config } from "./Config.mts";
 import { WebSocket } from "ws";
 import { DeviceConnection } from "./DeviceConnection.mts";
-import { ReaderDataType } from "./drmcl/ReaderDataType.mts";
-import { type SettingsMessageLike } from "./drmcl/settingsMessage.mts";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import fs from "fs/promises";
+import { type DeviceSettingsLike, ReaderDataType } from "./drmcl/index.mts";
 
 async function connect_device(
   config: DeviceConfig,
   constant_capture: boolean,
-  settings?: SettingsMessageLike,
+  settings?: DeviceSettingsLike,
   ca_cert?: Buffer<ArrayBufferLike>
 ) {
   const ws = new WebSocket(config.url(), {
@@ -20,9 +19,15 @@ async function connect_device(
   let device = new DeviceConnection(ws);
   await device.open();
   console.log(`Connection open to ${config.address}`);
+  
   await device.sendConnect(config.apiId, config.apiKey);
   console.log(`Connection authenticated for ApiId ${config.apiId}`);
-  if (settings) await device.sendSettings(settings);
+  
+  if (settings) {
+    console.log("Send Settings")  
+    await device.sendSettings(settings);
+  }
+
   console.log(`Start Session`);
   await device.sendOpenSession();
 
@@ -33,17 +38,22 @@ async function connect_device(
     for await (const msg of device.sendCaptureData()) {
       let d = msg.d;
       console.log(`Captured ${d.id} ${d.type}`);
-      
+
       switch (d.type) {
         case ReaderDataType.IMAGEVIS:
         case ReaderDataType.IMAGEVISREAR:
           console.log(`Get Data for ${d.type}`);
           results.push(
-            device.sendRetrieveData({ id: d.id, type: d.type }).then(async (msg) => {
-              // TODO: Store the results
-              if(msg.d.img?.data)
-                await fs.writeFile(`out/vis.jpg`, Buffer.from(msg.d.img.data, "base64"));
-            })
+            device
+              .sendRetrieveData({ id: d.id, type: d.type })
+              .then(async (msg) => {
+                // TODO: Store the results
+                if (msg.d.img?.data)
+                  await fs.writeFile(
+                    `out/vis.jpg`,
+                    Buffer.from(msg.d.img.data, "base64")
+                  );
+              })
           );
           break;
       }
