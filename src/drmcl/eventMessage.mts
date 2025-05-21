@@ -3,7 +3,7 @@
  * Copyright © Thales, 2023
  */
 
-import { EventCodes } from './EventCodes.mjs';
+import { EventCodes } from './EventCodes.mts';
 
 export function isEventMessage(obj: any): obj is EventMessageLike {
   return  obj && // not null AND

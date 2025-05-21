@@ -3,7 +3,7 @@
  * Copyright © Thales, 2023
  */
 
-import { MeasurementFormat } from './MeasurementFormat.mjs';
+import { MeasurementFormat } from './MeasurementFormat.mts';
 
 export function isSimpleMeasure(obj: any): obj is SimpleMeasureLike {
   return  obj && // not null AND

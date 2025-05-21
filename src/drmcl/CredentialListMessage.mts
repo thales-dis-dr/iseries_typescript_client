@@ -3,7 +3,7 @@
  * Copyright © Thales, 2023
  */
 
-import { Credential , CredentialLike, isCredential} from './Credential.mjs';
+import { Credential , type CredentialLike, isCredential} from './Credential.mts';
 
 export function isCredentialListMessage(obj: any): obj is CredentialListMessageLike {
   return  obj && // not null AND

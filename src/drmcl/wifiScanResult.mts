@@ -3,7 +3,7 @@
  * Copyright © Thales, 2023
  */
 
-import { WifiScanRecord , WifiScanRecordLike, isWifiScanRecord} from './wifiScanRecord.mjs';
+import { WifiScanRecord , type WifiScanRecordLike, isWifiScanRecord} from './wifiScanRecord.mts';
 
 export function isWifiScanResult(obj: any): obj is WifiScanResultLike {
   return  obj && // not null AND

@@ -3,7 +3,7 @@
  * Copyright © Thales, 2023
  */
 
-import { ExtraDataRecord, ExtraDataRecordLike } from './extraDataRecord.mjs';
+import { ExtraDataRecord, type ExtraDataRecordLike } from './extraDataRecord.mts';
 
 export function isExtraDataMessage(obj: any): obj is ExtraDataMessageLike {
   return  obj && // not null AND

@@ -3,16 +3,16 @@
  * Copyright © Thales, 2023
  */
 
-import { DataToSendSettings , DataToSendSettingsLike, isDataToSendSettings} from './dataToSendSettings.mjs';
-import { DocDetectSettings , DocDetectSettingsLike, isDocDetectSettings} from './docDetectSettings.mjs';
-import { DocProcessingSettings , DocProcessingSettingsLike, isDocProcessingSettings} from './docProcessingSettings.mjs';
-import { ImgSettings , ImgSettingsLike, isImgSettings} from './imgSettings.mjs';
-import { LoggingSettings , LoggingSettingsLike, isLoggingSettings} from './loggingSettings.mjs';
-import { MDLSettings , MDLSettingsLike, isMDLSettings} from './mDLSettings.mjs';
-import { OcrSettings , OcrSettingsLike, isOcrSettings} from './ocrSettings.mjs';
-import { RfConfigSettings , RfConfigSettingsLike, isRfConfigSettings} from './rfConfigSettings.mjs';
-import { RfDataToSendSettings , RfDataToSendSettingsLike, isRfDataToSendSettings} from './rfDataToSendSettings.mjs';
-import { SoundSettings , SoundSettingsLike, isSoundSettings} from './soundSettings.mjs';
+import { DataToSendSettings , type DataToSendSettingsLike, isDataToSendSettings} from './dataToSendSettings.mts';
+import { DocDetectSettings , type DocDetectSettingsLike, isDocDetectSettings} from './docDetectSettings.mts';
+import { DocProcessingSettings , type DocProcessingSettingsLike, isDocProcessingSettings} from './docProcessingSettings.mts';
+import { ImgSettings , type ImgSettingsLike, isImgSettings} from './imgSettings.mts';
+import { LoggingSettings , type LoggingSettingsLike, isLoggingSettings} from './loggingSettings.mts';
+import { MDLSettings , type MDLSettingsLike, isMDLSettings} from './mDLSettings.mts';
+import { OcrSettings , type OcrSettingsLike, isOcrSettings} from './ocrSettings.mts';
+import { RfConfigSettings , type RfConfigSettingsLike, isRfConfigSettings} from './rfConfigSettings.mts';
+import { RfDataToSendSettings , type RfDataToSendSettingsLike, isRfDataToSendSettings} from './rfDataToSendSettings.mts';
+import { SoundSettings , type SoundSettingsLike, isSoundSettings} from './soundSettings.mts';
 
 export function isDeviceSettings(obj: any): obj is DeviceSettingsLike {
   return  obj && // not null AND

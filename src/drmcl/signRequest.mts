@@ -3,7 +3,7 @@
  * Copyright © Thales, 2023
  */
 
-import { CertType } from './CertType.mjs';
+import { CertType } from './CertType.mts';
 
 export function isSignRequest(obj: any): obj is SignRequestLike {
   return  obj && // not null AND

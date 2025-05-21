@@ -3,7 +3,7 @@
  * Copyright © Thales, 2023
  */
 
-import { DeviceSettings , DeviceSettingsLike, isDeviceSettings} from './deviceSettings.mjs';
+import { DeviceSettings , type DeviceSettingsLike, isDeviceSettings} from './deviceSettings.mts';
 
 export function isSettingsMessage(obj: any): obj is SettingsMessageLike {
   return  obj && // not null AND

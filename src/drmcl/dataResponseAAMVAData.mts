@@ -3,8 +3,8 @@
  * Copyright © Thales, 2023
  */
 
-import { AamvaResult , AamvaResultLike, isAamvaResult} from './aamvaResult.mjs';
-import { ReaderDataType } from './ReaderDataType.mjs';
+import { AamvaResult , type AamvaResultLike, isAamvaResult} from './aamvaResult.mts';
+import { ReaderDataType } from './ReaderDataType.mts';
 
 export function isDataResponseAAMVAData(obj: any): obj is DataResponseAAMVADataLike {
   return  obj && // not null AND

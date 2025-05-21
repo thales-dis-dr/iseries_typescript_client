@@ -3,7 +3,7 @@
  * Copyright © Thales, 2023
  */
 
-import { ElementStatus } from './ElementStatus.mjs';
+import { ElementStatus } from './ElementStatus.mts';
 
 
 export function isMDLDataStatus(obj: any): obj is MDLDataStatusLike {

@@ -3,11 +3,11 @@
  * Copyright © Thales, 2023
  */
 
-import { AamvaDataItem , AamvaDataItemLike, isAamvaDataItem} from './aamvaDataItem.mjs';
-import { SimpleDate , SimpleDateLike, isSimpleDate} from './simpleDate.mjs';
-import { EyeColours } from './EyeColours.mjs';
-import { HairColours } from './HairColours.mjs';
-import { SimpleMeasure , SimpleMeasureLike, isSimpleMeasure} from './simpleMeasure.mjs';
+import { AamvaDataItem , type AamvaDataItemLike, isAamvaDataItem} from './aamvaDataItem.mts';
+import { SimpleDate ,type  SimpleDateLike, isSimpleDate} from './simpleDate.mts';
+import { EyeColours } from './EyeColours.mts';
+import { HairColours } from './HairColours.mts';
+import { SimpleMeasure , type SimpleMeasureLike, isSimpleMeasure} from './simpleMeasure.mts';
 
 export function isAamvaResult(obj: any): obj is AamvaResultLike {
   return  obj && // not null AND

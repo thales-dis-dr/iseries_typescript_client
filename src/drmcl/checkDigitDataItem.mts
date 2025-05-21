@@ -3,8 +3,8 @@
  * Copyright © Thales, 2023
  */
 
-import { ReaderCheckDigitType } from './ReaderCheckDigitType.mjs';
-import { ReaderCheckDigitResult } from './ReaderCheckDigitResult.mjs';
+import { ReaderCheckDigitType } from './ReaderCheckDigitType.mts';
+import { ReaderCheckDigitResult } from './ReaderCheckDigitResult.mts';
 
 export function isCheckDigitDataItem(obj: any): obj is CheckDigitDataItemLike {
   return  obj && // not null AND

@@ -3,8 +3,8 @@
  * Copyright © Thales, 2023
  */
 
-import { MrzData , MrzDataLike, isMrzData} from './mrzData.mjs';
-import { ReaderDataType } from './ReaderDataType.mjs';
+import { MrzData , type MrzDataLike, isMrzData} from './mrzData.mts';
+import { ReaderDataType } from './ReaderDataType.mts';
 
 export function isDataResponseCodelineData(obj: any): obj is DataResponseCodelineDataLike {
   return  obj && // not null AND

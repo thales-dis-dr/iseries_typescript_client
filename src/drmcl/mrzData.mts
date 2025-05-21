@@ -3,9 +3,9 @@
  * Copyright © Thales, 2023
  */
 
-import { CheckDigitDataItem , CheckDigitDataItemLike, isCheckDigitDataItem} from './checkDigitDataItem.mjs';
-import { ReaderCheckDigitResult } from './ReaderCheckDigitResult.mjs';
-import { SimpleDate , SimpleDateLike, isSimpleDate} from './simpleDate.mjs';
+import { CheckDigitDataItem , type CheckDigitDataItemLike, isCheckDigitDataItem} from './checkDigitDataItem.mts';
+import { ReaderCheckDigitResult } from './ReaderCheckDigitResult.mts';
+import { SimpleDate , type SimpleDateLike, isSimpleDate} from './simpleDate.mts';
 
 export function isMrzData(obj: any): obj is MrzDataLike {
   return  obj && // not null AND

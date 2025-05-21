@@ -3,7 +3,7 @@
  * Copyright © Thales, 2023
  */
 
-import { ErrorCodes } from './ErrorCodes.mjs';
+import { ErrorCodes } from './ErrorCodes.mts';
 
 export function isErrorMessage(obj: any): obj is ErrorMessageLike {
   return  obj && // not null AND

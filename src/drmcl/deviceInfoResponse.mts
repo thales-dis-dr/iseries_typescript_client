@@ -3,7 +3,7 @@
  * Copyright © Thales, 2023
  */
 
-import { CameraDimensions, CameraDimensionsLike } from './CameraDimensions.mjs';
+import { CameraDimensions, type CameraDimensionsLike } from './CameraDimensions.mts';
 
 export function isDeviceInfoResponse(obj: any): obj is DeviceInfoResponseLike {
   return  obj && // not null AND

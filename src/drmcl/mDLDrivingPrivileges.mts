@@ -3,7 +3,7 @@
  * Copyright © Thales, 2023
  */
 
-import { MDLVehicleCategory , MDLVehicleCategoryLike, isMDLVehicleCategory} from './mDLVehicleCategory.mjs';
+import { MDLVehicleCategory , type MDLVehicleCategoryLike, isMDLVehicleCategory} from './mDLVehicleCategory.mts';
 
 export function isMDLDrivingPrivileges(obj: any): obj is MDLDrivingPrivilegesLike {
   return  obj && // not null AND

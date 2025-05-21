@@ -3,7 +3,7 @@
  * Copyright © Thales, 2023
  */
 
-import { CameraType } from './CameraType.mjs';
+import { CameraType } from './CameraType.mts';
 
 export function isImageCaptureResult(obj: any): obj is ImageCaptureResultLike {
   return  obj && // not null AND

@@ -3,7 +3,7 @@
  * Copyright © Thales, 2023
  */
 
-import { CertificateCategory , CertificateCategoryLike, isCertificateCategory} from './certificateCategory.mjs';
+import { CertificateCategory , type CertificateCategoryLike, isCertificateCategory} from './certificateCategory.mts';
 
 export function isCertificateListCategoriesResult(obj: any): obj is CertificateListCategoriesResultLike {
   return  obj && // not null AND

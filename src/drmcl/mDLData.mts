@@ -3,8 +3,8 @@
  * Copyright © Thales, 2023
  */
 
-import { RequestAgeOverNNResult } from './RequestAgeOverNNResult.mjs';
-import { MDLDrivingPrivileges , MDLDrivingPrivilegesLike, isMDLDrivingPrivileges} from './mDLDrivingPrivileges.mjs';
+import { RequestAgeOverNNResult } from './RequestAgeOverNNResult.mts';
+import { MDLDrivingPrivileges , type MDLDrivingPrivilegesLike, isMDLDrivingPrivileges} from './mDLDrivingPrivileges.mts';
 
 export function isMDLData(obj: any): obj is MDLDataLike {
   return  obj && // not null AND

@@ -3,8 +3,8 @@
  * Copyright © Thales, 2023
  */
 
-import { TRISTATE } from './TRISTATE.mjs';
-import { ReaderDataType } from './ReaderDataType.mjs';
+import { TRISTATE } from './TRISTATE.mts';
+import { ReaderDataType } from './ReaderDataType.mts';
 
 export function isDataResponseOperationStatus(obj: any): obj is DataResponseOperationStatusLike {
   return  obj && // not null AND

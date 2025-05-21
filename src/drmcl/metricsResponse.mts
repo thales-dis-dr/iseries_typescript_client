@@ -3,33 +3,42 @@
  * Copyright © Thales, 2023
  */
 
-import { MetricsData , MetricsDataLike, isMetricsData} from './metricsData.mjs';
+import {
+  MetricsData,
+  type MetricsDataLike,
+  isMetricsData,
+} from "./metricsData.mts";
 
 export function isMetricsResponse(obj: any): obj is MetricsResponseLike {
-  return  obj && // not null AND
-    (( obj instanceof MetricsResponse) || // instance of MetricsResponse OR
-    ( typeof obj === 'object' && "hw" in obj && /*"metrics" in obj && */ "serial" in obj && "version" in obj &&     true) // its an object with all the right properties
-    );
+  return (
+    obj && // not null AND
+    (obj instanceof MetricsResponse || // instance of MetricsResponse OR
+      (typeof obj === "object" &&
+        "hw" in obj &&
+        /*"metrics" in obj && */ "serial" in obj &&
+        "version" in obj &&
+        true)) // its an object with all the right properties
+  );
 }
 /**
  * @deprecated The interface should not be used. This will be removed in a future version
  */
 export interface MetricsResponseLike {
-/**
- * hardware identifier
- */
+  /**
+   * hardware identifier
+   */
   hw: string;
-/**
- * Collection of event metrics data
- */
+  /**
+   * Collection of event metrics data
+   */
   metrics?: MetricsDataLike[] | undefined | null;
-/**
- * Serial
- */
+  /**
+   * Serial
+   */
   serial: string;
-/**
- * Version
- */
+  /**
+   * Version
+   */
   version: string;
   /** Indexer */
   [key: string]: any;
@@ -49,29 +58,29 @@ export class MetricsResponse /*extends MessageData implements MetricsResponseLik
     this.version = "";
   }
 
-/**
- * hardware identifier
- */
+  /**
+   * hardware identifier
+   */
   hw: string;
-/**
- * Collection of event metrics data
- */
+  /**
+   * Collection of event metrics data
+   */
   metrics?: MetricsData[] | undefined | null;
-/**
- * Serial
- */
+  /**
+   * Serial
+   */
   serial: string;
-/**
- * Version
- */
+  /**
+   * Version
+   */
   version: string;
   /**
-   * parses a string into a MetricsResponse.  
+   * parses a string into a MetricsResponse.
    * @returns a new MetricsResponse; or undefined if the object could not be parsed.
    */
-  static parse(data:string): MetricsResponse {
+  static parse(data: string): MetricsResponse {
     const obj = JSON.parse(data);
-    if(obj && isMetricsResponse(obj)){
+    if (obj && isMetricsResponse(obj)) {
       return MetricsResponse.copy(obj);
     }
     throw Error("Cannot parse MetricsResponse from " + data);
@@ -81,15 +90,17 @@ export class MetricsResponse /*extends MessageData implements MetricsResponseLik
    * Returns a copy of MetricsResponse or undefined if the original object is not copyable.
    */
   static copy(obj: MetricsResponseLike): MetricsResponse {
-    if(isMetricsResponse(obj)){
+    if (isMetricsResponse(obj)) {
       let copy = new MetricsResponse();
       copy = Object.assign(copy, obj);
-      if(obj.metrics) {
+      if (obj.metrics) {
         copy.metrics = new Array<MetricsData>();
-        for(const el of obj.metrics){
-          if(isMetricsData(el)){
+        for (const el of obj.metrics) {
+          if (isMetricsData(el)) {
             copy.metrics.push(MetricsData.copy(el));
-          } else { throw Error("Missing required property metrics of MetricsResponse") }
+          } else {
+            throw Error("Missing required property metrics of MetricsResponse");
+          }
         }
       }
       return copy;

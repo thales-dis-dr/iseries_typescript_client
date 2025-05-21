@@ -3,15 +3,15 @@
  * Copyright © Thales, 2023
  */
 
-import { AamvaResult , AamvaResultLike, isAamvaResult} from './aamvaResult.mjs';
-import { BarcodeCaptureResult , BarcodeCaptureResultLike, isBarcodeCaptureResult} from './barcodeCaptureResult.mjs';
-import { MrzData , MrzDataLike, isMrzData} from './mrzData.mjs';
-import { Image , ImageLike, isImage} from './image.mjs';
-import { MDLData , MDLDataLike, isMDLData} from './mDLData.mjs';
-import { MDLDataStatus , MDLDataStatusLike, isMDLDataStatus} from './mDLDataStatus.mjs';
-import { TRISTATE } from './TRISTATE.mjs';
-import { ReaderDataType } from './ReaderDataType.mjs';
-import { ReaderValidationCode } from './ReaderValidationCode.mjs';
+import { AamvaResult , type AamvaResultLike, isAamvaResult} from './aamvaResult.mts';
+import { BarcodeCaptureResult , type BarcodeCaptureResultLike, isBarcodeCaptureResult} from './barcodeCaptureResult.mts';
+import { MrzData ,type  MrzDataLike, isMrzData} from './mrzData.mts';
+import { Image , type ImageLike, isImage} from './image.mts';
+import { MDLData ,type  MDLDataLike, isMDLData} from './mDLData.mts';
+import { MDLDataStatus , type MDLDataStatusLike, isMDLDataStatus} from './mDLDataStatus.mts';
+import { TRISTATE } from './TRISTATE.mts';
+import { ReaderDataType } from './ReaderDataType.mts';
+import { ReaderValidationCode } from './ReaderValidationCode.mts';
 
 export function isDataResponse(obj: any): obj is DataResponseLike {
   return  obj && // not null AND

@@ -3,11 +3,11 @@
  * Copyright © Thales, 2023
  */
 
-import { CoaxIRCameraMode } from './CoaxIRCameraMode.mjs';
-import { CoaxVisibleCameraMode } from './CoaxVisibleCameraMode.mjs';
-import { IRCameraMode } from './IRCameraMode.mjs';
-import { VisibleCameraMode } from './VisibleCameraMode.mjs';
-import { UVCameraMode } from './UVCameraMode.mjs';
+import { CoaxIRCameraMode } from './CoaxIRCameraMode.mts';
+import { CoaxVisibleCameraMode } from './CoaxVisibleCameraMode.mts';
+import { IRCameraMode } from './IRCameraMode.mts';
+import { VisibleCameraMode } from './VisibleCameraMode.mts';
+import { UVCameraMode } from './UVCameraMode.mts';
 
 export function isDataToSendSettings(obj: any): obj is DataToSendSettingsLike {
   return  obj && // not null AND

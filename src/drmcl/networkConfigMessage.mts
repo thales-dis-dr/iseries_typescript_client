@@ -3,8 +3,8 @@
  * Copyright © Thales, 2023
  */
 
-import { WiredSettings , WiredSettingsLike, isWiredSettings} from './wiredSettings.mjs';
-import { WifiSettings , WifiSettingsLike, isWifiSettings} from './wifiSettings.mjs';
+import { WiredSettings ,type  WiredSettingsLike, isWiredSettings} from './wiredSettings.mts';
+import { WifiSettings ,type  WifiSettingsLike, isWifiSettings} from './wifiSettings.mts';
 
 export function isNetworkConfigMessage(obj: any): obj is NetworkConfigMessageLike {
   return  obj && // not null AND

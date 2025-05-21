@@ -3,7 +3,7 @@
  * Copyright © Thales, 2023
  */
 
-import { DeviceCredentials , DeviceCredentialsLike, isDeviceCredentials} from './deviceCredentials.mjs';
+import { DeviceCredentials , type DeviceCredentialsLike, isDeviceCredentials} from './deviceCredentials.mts';
 
 export function isCredentialAddMessage(obj: any): obj is CredentialAddMessageLike {
   return  obj && // not null AND

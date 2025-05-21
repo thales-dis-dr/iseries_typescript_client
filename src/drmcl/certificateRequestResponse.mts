@@ -3,8 +3,8 @@
  * Copyright © Thales, 2023
  */
 
-import { CertData , CertDataLike, isCertData} from './certData.mjs';
-import { CertType } from './CertType.mjs';
+import { CertData , type CertDataLike, isCertData} from './certData.mts';
+import { CertType } from './CertType.mts';
 
 export function isCertificateRequestResponse(obj: any): obj is CertificateRequestResponseLike {
   return  obj && // not null AND

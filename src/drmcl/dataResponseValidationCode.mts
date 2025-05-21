@@ -3,8 +3,8 @@
  * Copyright © Thales, 2023
  */
 
-import { ReaderDataType } from './ReaderDataType.mjs';
-import { ReaderValidationCode } from './ReaderValidationCode.mjs';
+import { ReaderDataType } from './ReaderDataType.mts';
+import { ReaderValidationCode } from './ReaderValidationCode.mts';
 
 export function isDataResponseValidationCode(obj: any): obj is DataResponseValidationCodeLike {
   return  obj && // not null AND

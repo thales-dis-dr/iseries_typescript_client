@@ -3,7 +3,7 @@
  * Copyright © Thales, 2023
  */
 
-import { NetworkSetting , NetworkSettingLike, isNetworkSetting} from './networkSetting.mjs';
+import { NetworkSetting , type NetworkSettingLike, isNetworkSetting} from './networkSetting.mts';
 
 export function isWifiSettings(obj: any): obj is WifiSettingsLike {
   return  obj && // not null AND

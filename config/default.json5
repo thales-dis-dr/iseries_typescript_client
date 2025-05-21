@@ -1,9 +1,14 @@
 {
+  "constant_capture": false,       // will restart capture once one capture is completed.
+  "ca_cert_path": "config/PageReaderCA.pem", // path to the CA certificate
   "devices": [
-    {
-      "ip": "",
-      "apiId": "test",
-      "apiKey": "test"
-    }
+    //{
+    //   "address": "192.168.0.231", // devices ip address
+    //   "port": null,               // Devices port.  80 or 443 for ws or wss respectively. defaults to 443
+    //   "protocol": null,           // 'ws' or 'wss'.  Defaults to 'wss' for all ports except 80
+    //   "apiId": "test",            // login credentials
+    //   "apiKey": "test",           // login credentials
+    //   "jwt": null                 // login credentials
+    //}
   ]
 }

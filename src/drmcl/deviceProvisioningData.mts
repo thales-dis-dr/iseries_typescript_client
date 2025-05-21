@@ -3,10 +3,10 @@
  * Copyright © Thales, 2023
  */
 
-import { DeviceCredentials , DeviceCredentialsLike, isDeviceCredentials} from './deviceCredentials.mjs';
-import { OnboardKeyValuePair , OnboardKeyValuePairLike, isOnboardKeyValuePair} from './onboardKeyValuePair.mjs';
-import { WiredSettings , WiredSettingsLike, isWiredSettings} from './wiredSettings.mjs';
-import { WifiSettings , WifiSettingsLike, isWifiSettings} from './wifiSettings.mjs';
+import { DeviceCredentials , type DeviceCredentialsLike, isDeviceCredentials} from './deviceCredentials.mts';
+import { OnboardKeyValuePair , type OnboardKeyValuePairLike, isOnboardKeyValuePair} from './onboardKeyValuePair.mts';
+import { WiredSettings , type WiredSettingsLike, isWiredSettings} from './wiredSettings.mts';
+import { WifiSettings , type WifiSettingsLike, isWifiSettings} from './wifiSettings.mts';
 
 export function isDeviceProvisioningData(obj: any): obj is DeviceProvisioningDataLike {
   return  obj && // not null AND

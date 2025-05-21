@@ -3,7 +3,7 @@
  * Copyright © Thales, 2023
  */
 
-import { MrzData , MrzDataLike, isMrzData} from './mrzData.mjs';
+import { MrzData , type MrzDataLike, isMrzData} from './mrzData.mts';
 
 export function isMrzCaptureResult(obj: any): obj is MrzCaptureResultLike {
   return  obj && // not null AND

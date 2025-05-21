@@ -3,9 +3,9 @@
  * Copyright © Thales, 2023
  */
 
-import { MrzData , MrzDataLike, isMrzData} from './mrzData.mjs';
-import { TRISTATE } from './TRISTATE.mjs';
-import { ReaderValidationCode } from './ReaderValidationCode.mjs';
+import { MrzData , type MrzDataLike, isMrzData} from './mrzData.mts';
+import { TRISTATE } from './TRISTATE.mts';
+import { ReaderValidationCode } from './ReaderValidationCode.mts';
 
 export function isSmartcardFileResult(obj: any): obj is SmartcardFileResultLike {
   return  obj && // not null AND

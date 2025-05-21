@@ -1,4 +1,4 @@
-import * as drmcl from "./drmcl/index.mjs";
+import * as drmcl from "./drmcl/index.mts";
 
 /** Message wrapper that had no data payload */
 export interface EmptyMessageWrapper {

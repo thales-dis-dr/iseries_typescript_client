@@ -3,9 +3,9 @@
  * Copyright © Thales, 2023
  */
 
-import { ExternalCertMode } from './ExternalCertMode.mjs';
-import { DocSignerCertMode } from './DocSignerCertMode.mjs';
-import { TerminalType } from './TerminalType.mjs';
+import { ExternalCertMode } from './ExternalCertMode.mts';
+import { DocSignerCertMode } from './DocSignerCertMode.mts';
+import { TerminalType } from './TerminalType.mts';
 
 export function isRfConfigSettings(obj: any): obj is RfConfigSettingsLike {
   return  obj && // not null AND

@@ -1,33 +1,48 @@
 import { WebSocket } from "ws";
+import * as rx from "rxjs";
+import * as drmcl from "./drmcl/index.mts";
 import {
   ConnectionEvents,
-  DataCaptureResultLike,
-  DataRequest,
-  DataRequestLike,
-  DataResponseLike,
-  DeviceSettingsLike,
-  isDataCaptureResult,
+  type DeviceSettingsLike,
   isDataRequest,
-  isDataResponse,
   isDeviceSettings,
-  isErrorMessage,
   isSettingsMessage,
-  isTokenMessage,
-  ReaderDataType,
   SettingsMessage,
-  SettingsMessageLike,
-} from "./drmcl/index.mjs";
+  type SettingsMessageLike,
+} from "./drmcl/index.mts";
 import {
-  AuthenticateMessageWrapper,
-  ConnectMessageWrapper,
-  EmptyMessageWrapper,
-  RetrieveDataMessageWrapper,
-  SetSettingsMessageWrapper,
-  UnknownMessageWrapper,
-} from "./Message.mjs";
+  type EmptyMessageWrapper,
+  type MessageWrapper,
+  type UnknownMessageWrapper,
+} from "./Message.mts";
 import { EventEmitter } from "events";
+import { eachValueFrom } from "rxjs-for-await";
 
-type SomeI = number | undefined;
+function map_empty(observable: rx.Observable<UnknownMessageWrapper>) {
+  return observable.pipe(
+    rx.map((msg, _index) => {
+      return msg as EmptyMessageWrapper;
+    })
+  );
+}
+
+function map_unknown(
+  observable: rx.Observable<UnknownMessageWrapper>,
+  check: (msg: UnknownMessageWrapper) => boolean = () => true
+) {
+  return observable.pipe(rx.filter(check));
+}
+
+function map_result<T>(
+  observable: rx.Observable<UnknownMessageWrapper>,
+  check: (msg: UnknownMessageWrapper) => boolean = () => true
+) {
+  return observable.pipe(rx.filter(check)).pipe(
+    rx.map((msg, _index) => {
+      return msg as MessageWrapper<T>;
+    })
+  );
+}
 
 export class DeviceConnection {
   // the socket
@@ -47,18 +62,64 @@ export class DeviceConnection {
 
   private pingTimeout: NodeJS.Timeout | undefined;
 
+  // observer of the ws.on("message") events
+  private messages: rx.Observable<UnknownMessageWrapper>;
+
   /**
    * Creates the Class
    */
   constructor(ws: WebSocket) {
     // super();
+    this.messages = new rx.Observable<UnknownMessageWrapper>();
     this.ws = ws;
 
     // ws sets the this parameter in its callbacks to the WebSocket
     let that = this;
-    this.ws.on("open", () => that.heartbeat());
+
+    this.ws.on("open", (...args: any[]) => {
+      console.log(" > open:", ...args);
+      that.heartbeat();
+
+      // create an observer of ws.on("message")
+      let messages = (that.messages = rx
+        .fromEvent(ws, "message", (event) => {
+          //console.log(" > message received: ", event.data);
+          const { data, ...remainder } = event;
+          const json = JSON.parse(data.toString()) as UnknownMessageWrapper;
+          switch (json.t) {
+            case ConnectionEvents.RETURNED_IMAGE:
+            case ConnectionEvents.RETURNED_DATA:
+              const { t, i, d } = json;
+              // if("img" in d && "data")
+              // if("data" in d)
+              //   d.data = "<base64>";
+              console.log(" > message received: ", { t, i, d });
+              break;
+            default:
+              console.log(" > message received: ", event.data);
+              break;
+          }
+          return json;
+        })
+        .pipe(rx.share()));
+
+      messages
+        .pipe(
+          rx.filter(
+            (msg) =>
+              msg.t == ConnectionEvents.CONNECTED ||
+              msg.t == ConnectionEvents.AUTHENTICATED
+          )
+        )
+        .subscribe((msg) => (that.connected = true));
+      messages
+        .pipe(rx.filter((msg) => msg.t == ConnectionEvents.SESSION_OPEN))
+        .subscribe((msg) => (that.session = true));
+      messages
+        .pipe(rx.filter((msg) => msg.t == ConnectionEvents.SESSION_CLOSED))
+        .subscribe((msg) => (that.session = false));
+    });
     this.ws.on("ping", () => that.heartbeat());
-    this.ws.on("message", (data, isBinary) => that.onMessage(data.toString()));
     this.ws.on("close", (code, reason) => {
       console.log(`Connection Closed ${code}: ${reason.toString()}`);
       that.connected = false;
@@ -79,128 +140,105 @@ export class DeviceConnection {
     }, 30000 + 1000);
   }
 
-  on(
-    eventNam: "token",
-    listener: (i: SomeI, token: string) => void
-  ): DeviceConnection;
-  on(
-    eventName: "authenticated",
-    listener: (i: SomeI) => void
-  ): DeviceConnection;
-  on(
-    eventName: "session_closed",
-    listener: (i: SomeI) => void
-  ): DeviceConnection;
-  on(
-    eventName: "data",
-    listener: (i: SomeI, d: DataResponseLike) => void
-  ): DeviceConnection;
-  on(eventName: "doc_found", listener: (i: SomeI) => void): DeviceConnection;
-  on(
-    eventName: "capture_completed",
-    listener: (i: SomeI) => void
-  ): DeviceConnection;
-  on(
-    eventName: "session_opened",
-    listener: (i: SomeI) => void
-  ): DeviceConnection;
-  on(
-    eventName: "data_captured",
-    listener: (i: SomeI, result: DataCaptureResultLike) => void
-  ): DeviceConnection;
-  on(eventName: string, listener: (...args: any[]) => void): DeviceConnection {
-    this.emitter.on(eventName, listener);
-    return this;
-  }
-
-  private emit(eventName: "authenticated", i: SomeI): boolean;
-  private emit(eventName: "session_closed", i: SomeI): boolean;
-  private emit(eventName: "doc_found", i: SomeI): boolean;
-  private emit(eventName: "capture_completed", i: SomeI): boolean;
-  private emit(eventName: "session_opened", i: SomeI): boolean;
-  private emit(eventName: "token", i: SomeI, token: string): boolean;
-  private emit(eventName: "data", i: SomeI, d: DataResponseLike): boolean;
-  private emit(
-    eventName: "data_captured",
-    i: SomeI,
-    result: DataCaptureResultLike
-  ): boolean;
-  private emit(eventName: string, ...args: any[]): boolean {
-    return this.emitter.emit(eventName, args);
-  }
-
   /** Creates a new 'i' parameter for messages. */
   nextI() {
     this.unique_i++;
     return this.unique_i;
   }
 
+  /** Creates a MessageWrapper, send it and returns an observable that looks for its returned results. */
+  private sendTD<D>(t: ConnectionEvents, d: D) {
+    let i = this.nextI();
+
+    let message: MessageWrapper<D> = { t, i, d };
+
+    return this.send(message);
+  }
+  /** Creates a MessageWrapper, send it and returns an observable that looks for its returned results. */
+  private sendT(t: ConnectionEvents) {
+    let i = this.nextI();
+
+    let message: EmptyMessageWrapper = { t, i };
+
+    return this.send(message);
+  }
+
+  /** sends a message and generates an observable that looks for the same i to be returned. */
+  private send<T extends EmptyMessageWrapper>(message: T) {
+    const i = message.i;
+    const observable = this.messages.pipe(
+      rx.filter((msg, index) => msg.i === i)
+    );
+    const data = JSON.stringify(message);
+    console.log(" > sending message: ", data);
+    this.ws.send(data);
+    return observable;
+  }
+
+  open() {
+    return rx.firstValueFrom(rx.fromEvent(this.ws, "open", () => {}));
+  }
+
   /** sends the  CONNECT:1 message to the device */
   sendConnect(authKey: string, authKeyID: string) {
-    let message: ConnectMessageWrapper = {
-      t: ConnectionEvents.CONNECT, // 1,
-      i: this.nextI(),
-      d: {
-        authKey,
-        authKeyID,
-      },
-    };
-
-    this.ws.send(JSON.stringify(message));
+    return rx.firstValueFrom(
+      map_result<drmcl.ConnectedMessageLike>(
+        this.sendTD<drmcl.ConnectMessage>(ConnectionEvents.CONNECT, {
+          authKey,
+          authKeyID,
+        })
+      )
+    );
   }
 
   /** sends the  AUTHENTICATE:91 message to the device */
   sendAuthenticate(token: string) {
-    let message: AuthenticateMessageWrapper = {
-      t: ConnectionEvents.AUTHENTICATE, // 91,
-      i: this.nextI(),
-      d: {
-        token,
-      },
-    };
-
-    this.ws.send(JSON.stringify(message));
+    return rx.firstValueFrom(
+      map_result<drmcl.ConnectedMessageLike>(
+        this.sendTD<drmcl.Authenticate>(ConnectionEvents.AUTHENTICATE, {
+          token,
+        })
+      )
+    );
   }
 
   /** sends the SESSION_OPEN:9 message to the device */
   sendOpenSession() {
-    let message: EmptyMessageWrapper = {
-      t: ConnectionEvents.SESSION_OPEN, // 9,
-      i: this.nextI(),
-    };
-
-    this.ws.send(JSON.stringify(message));
+    return rx.firstValueFrom(
+      map_empty(this.sendT(ConnectionEvents.SESSION_OPEN))
+    );
   }
 
   /** sends the SESSION_CLOSE:11 message to the device */
   sendCloseSession() {
-    let message: EmptyMessageWrapper = {
-      t: ConnectionEvents.SESSION_CLOSE, // 11,
-      i: this.nextI(),
-    };
-
-    this.ws.send(JSON.stringify(message));
+    return rx.firstValueFrom(
+      map_empty(this.sendT(ConnectionEvents.SESSION_CLOSE))
+    );
   }
 
   /** sends the CAPTURE_DATA:50 message to the device */
   sendCaptureData() {
-    let message: EmptyMessageWrapper = {
-      t: ConnectionEvents.CAPTURE_DATA, // 50,
-      i: this.nextI(),
-    };
+    const end = new rx.Subject();
+    let observable = map_unknown(this.sendT(ConnectionEvents.CAPTURE_DATA))
+      .pipe(
+        rx.tap((msg) => {
+          if (msg.t == ConnectionEvents.CAPTURED) end.next(null);
+        })
+      )
+      .pipe(rx.filter((msg) => msg.t == ConnectionEvents.CAPTURE_DATA_CAPTURED))
+      .pipe(rx.takeUntil(end));
 
-    this.ws.send(JSON.stringify(message));
+    return eachValueFrom(map_result<drmcl.DataCaptureResultLike>(observable));
   }
 
+  /** sends the GET_TOKEN:89 message to the device */
   sendGetToken() {
-    let message: EmptyMessageWrapper = {
-      t: ConnectionEvents.GET_TOKEN, // 89,
-      i: this.nextI(),
-    };
-
-    this.ws.send(JSON.stringify(message));
+    return rx.firstValueFrom(
+      map_result<drmcl.TokenMessage>(this.sendT(ConnectionEvents.GET_TOKEN))
+    );
   }
 
+  /** sends the SET_SETTINGS:35 message to the device */
   sendSettings(settings: DeviceSettingsLike): void;
   sendSettings(settings: SettingsMessageLike): void;
   sendSettings(settings: DeviceSettingsLike | SettingsMessageLike) {
@@ -213,116 +251,33 @@ export class DeviceConnection {
       throw new Error("settings must look like a valid ");
     }
 
-    let message: SetSettingsMessageWrapper = {
-      t: ConnectionEvents.SET_SETTINGS, // 35,
-      i: this.nextI(),
-      d,
-    };
-    this.ws.send(JSON.stringify(message));
-  }
-  sendRetrieveData(data: DataRequestLike): void;
-  sendRetrieveData(
-    id: number,
-    type: ReaderDataType,
-    image_format?: "jpg" | "png" | "bmp",
-    image_compression?: number
-  ): void;
-  sendRetrieveData(
-    id_or_data: number | DataRequestLike,
-    type?: ReaderDataType,
-    image_format?: "jpg" | "png" | "bmp",
-    image_compression?: number
-  ): void {
-    let data: DataRequest;
-    if (isDataRequest(id_or_data)) {
-      data = DataRequest.copy(id_or_data);
-    } else {
-      if (typeof id_or_data !== "number")
-        throw new Error("id must be a number");
-      if (type == undefined)
-        throw new Error("type must a valid ReaderDataType");
-
-      data = DataRequest.copy({
-        id: id_or_data,
-        type: type,
-        image_compression: image_compression,
-        image_format: image_format,
-      });
-    }
-
-    let message: RetrieveDataMessageWrapper = {
-      t: ConnectionEvents.CAPTURE_DATA, // 50,
-      i: this.nextI(),
-      d: data,
-    };
-
-    this.ws.send(JSON.stringify(message));
+    return rx.firstValueFrom(
+      map_empty(this.sendTD(ConnectionEvents.SET_SETTINGS, d))
+    );
   }
 
-  onMessage(data: string) {
-    let message: UnknownMessageWrapper = JSON.parse(data);
-    console.log(`Received t=${message.t}, i=${message.i} `);
+  /** sends the GET_SETTINGS:32 message to the device */
+  sendGetSettings() {
+    return rx.firstValueFrom(
+      map_result<drmcl.SettingsMessage>(
+        this.sendT(ConnectionEvents.GET_SETTINGS)
+      )
+    );
+  }
 
-    switch (message.t) {
-      case ConnectionEvents.CONNECTED:
-      case ConnectionEvents.AUTHENTICATED:
-        this.connected = true;
-        this.emit("authenticated", message.i);
-        break;
-      case ConnectionEvents.INVALID_KEY:
-        console.error("Invalid Key");
-        break;
-      case ConnectionEvents.UNPROVISIONED_DEVICE:
-        console.error("The device is not provisioned");
-        break;
-      case ConnectionEvents.SESSION_OPENED:
-        this.session = true;
-        this.emit("session_opened", message.i);
-        break;
-      case ConnectionEvents.SESSION_CLOSED:
-        this.session = false;
-        this.emit("session_closed", message.i);
-      case ConnectionEvents.SESSION_IN_USE:
-        console.error("Session In Use");
-        break;
-      case ConnectionEvents.ERROR:
-        if (isErrorMessage(message.d)) {
-          console.error(`Error with ID ${message.d.errorId}`);
-        } else {
-          console.error(`Error ${JSON.stringify(message.d)}`);
-        }
-        break;
-      case ConnectionEvents.CAPTURE_DOCFOUND:
-        console.log("Document found");
-        this.emit("doc_found", message.i);
-        break;
-      case ConnectionEvents.CAPTURE_DATA_CAPTURED:
-        if (isDataCaptureResult(message.d)) {
-          console.log(`Data scanned ${message.d.id} of type ${message.d.type}`);
-          this.emit("data_captured", message.i, message.d);
-        } else console.error("Unexpected error with CAPTURE_DATA_CAPTURED");
-        break;
-      case ConnectionEvents.CAPTURED:
-        console.log("Capture Completed");
-        this.emit("capture_completed", message.i);
-        break;
-      case ConnectionEvents.RETURNED_DATA:
-        if (isDataResponse(message.d)) {
-          console.log(
-            `Data returned ${message.d.id} of type ${message.d.type}`
-          );
-          this.emit("data", message.i, message.d);
-        } else console.error("Unexpected error with RETURNED_DATA");
-
-        break;
-      case ConnectionEvents.TOKEN:
-        if (isTokenMessage(message.d)) {
-          console.log(
-            `Data returned ${message.d.id} of type ${message.d.type}`
-          );
-          this.emit("token", message.i, message.d.token);
-        } else console.error("Unexpected error with TOKEN");
-        break;
+  /** sends the RETRIEVE_DATA:52 message to the device */
+  sendRetrieveData(
+    data: drmcl.DataRequestLike
+  ): Promise<MessageWrapper<drmcl.DataResponse>> {
+    if (!isDataRequest(data)) {
+      throw new Error("type must a valid ReaderDataType");
     }
+    let d = drmcl.DataRequest.copy(data);
+
+    return rx.firstValueFrom(
+      map_result<drmcl.DataResponse>(
+        this.sendTD(ConnectionEvents.RETRIEVE_DATA, d)
+      )
+    );
   }
 }

@@ -3,7 +3,7 @@
  * Copyright © Thales, 2023
  */
 
-import { ReaderDataType } from './ReaderDataType.mjs';
+import { ReaderDataType } from './ReaderDataType.mts';
 
 export function isDataRequest(obj: any): obj is DataRequestLike {
   return  obj && // not null AND
