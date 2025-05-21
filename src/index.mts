@@ -42,7 +42,7 @@ async function connect_device(
             device.sendRetrieveData({ id: d.id, type: d.type }).then(async (msg) => {
               // TODO: Store the results
               if(msg.d.img?.data)
-                await fs.writeFile(`vis.jpg`, Buffer.from(msg.d.img.data, "base64"));
+                await fs.writeFile(`out/vis.jpg`, Buffer.from(msg.d.img.data, "base64"));
             })
           );
           break;
