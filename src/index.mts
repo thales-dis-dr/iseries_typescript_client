@@ -136,7 +136,7 @@ async function main() {
           config.constant_capture || argv.constant_capture,
           config.settings,
           ca,
-          argv.wait_doc_remove
+         config.wait_doc_remove || argv.wait_doc_remove
         )
       );
     }

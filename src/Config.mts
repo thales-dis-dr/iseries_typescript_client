@@ -95,6 +95,7 @@ type ConfigLike = Partial<Config> & Required<Pick<Config, "devices">>;
 
 export class Config {
   constant_capture?: boolean;
+  wait_doc_remove?: boolean;
   ca_cert_path?: string;
   settings?: DeviceSettingsLike;
   devices: DeviceConfig[];
@@ -108,11 +109,13 @@ export class Config {
 
   constructor(
     constant_capture: boolean | undefined | null,
+    wait_doc_remove: boolean | undefined | null,
     settings: DeviceSettingsLike | undefined | null,
     devices: DeviceConfig[] | undefined | null,
     ca_cert_path: string | undefined | null
   ) {
     this.constant_capture = constant_capture || undefined;
+    this.wait_doc_remove = wait_doc_remove || undefined;
     this.settings = settings || undefined;
     this.devices = devices || [];
     this.ca_cert_path = ca_cert_path || undefined;
@@ -163,6 +166,7 @@ export class Config {
 
     return new Config(
       output.constant_capture,
+      output.wait_doc_remove,
       output.settings,
       mergedDevices,
       output.ca_cert_path
