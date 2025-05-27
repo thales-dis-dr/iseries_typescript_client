@@ -17,39 +17,12 @@ import {
 } from "./Message.mts";
 import { EventEmitter } from "events";
 import { eachValueFrom } from "rxjs-for-await";
-
-function map_empty(observable: rx.Observable<UnknownMessageWrapper>) {
-  return observable.pipe(
-    rx.map((msg, _index) => {
-      return msg as EmptyMessageWrapper;
-    })
-  );
-}
-
-function map_unknown(
-  observable: rx.Observable<UnknownMessageWrapper>,
-  check: (msg: UnknownMessageWrapper) => boolean = () => true
-) {
-  return observable.pipe(rx.filter(check));
-}
-
-function map_result<T>(
-  observable: rx.Observable<UnknownMessageWrapper>,
-  check: (msg: UnknownMessageWrapper) => boolean = () => true
-) {
-  return observable.pipe(rx.filter(check)).pipe(
-    rx.map((msg, _index) => {
-      return msg as MessageWrapper<T>;
-    })
-  );
-}
+import * as rxu from "./rxutil.mjs";
+import { nullToUndefined } from "./util.mts";
 
 export class DeviceConnection {
   // the socket
   private ws: WebSocket;
-
-  // event emitter helper
-  private emitter: EventEmitter = new EventEmitter();
 
   /// helper to keep a unique 'i' value
   private unique_i = 0;
@@ -101,23 +74,20 @@ export class DeviceConnection {
           }
           return json;
         })
-        .pipe(rx.share()));
-
-      messages
         .pipe(
-          rx.filter(
-            (msg) =>
+          rx.tap((msg) => {
+            if (
               msg.t == ConnectionEvents.CONNECTED ||
               msg.t == ConnectionEvents.AUTHENTICATED
-          )
+            )
+              that.connected = true;
+            else if (msg.t == ConnectionEvents.SESSION_OPENED)
+              that.session = true;
+            else if (msg.t == ConnectionEvents.SESSION_CLOSED)
+              that.session = false;
+          })
         )
-        .subscribe((msg) => (that.connected = true));
-      messages
-        .pipe(rx.filter((msg) => msg.t == ConnectionEvents.SESSION_OPEN))
-        .subscribe((msg) => (that.session = true));
-      messages
-        .pipe(rx.filter((msg) => msg.t == ConnectionEvents.SESSION_CLOSED))
-        .subscribe((msg) => (that.session = false));
+        .pipe(rx.share()));
     });
     this.ws.on("ping", () => that.heartbeat());
     this.ws.on("close", (code, reason) => {
@@ -154,6 +124,7 @@ export class DeviceConnection {
 
     return this.send(message);
   }
+
   /** Creates a MessageWrapper, send it and returns an observable that looks for its returned results. */
   private sendT(t: ConnectionEvents) {
     let i = this.nextI();
@@ -166,15 +137,19 @@ export class DeviceConnection {
   /** sends a message and generates an observable that looks for the same i to be returned. */
   private send<T extends EmptyMessageWrapper>(message: T) {
     const i = message.i;
-    const observable = this.messages.pipe(
-      rx.filter((msg, index) => msg.i === i)
-    );
+    const observable = this.messages
+      .pipe(rx.filter((msg, index) => msg.i === i))
+      .pipe(
+        rxu.error_on(ConnectionEvents.ERROR, ConnectionEvents.INVALID_COMMAND)
+      );
+
     const data = JSON.stringify(message);
     console.log(" > sending message: ", data);
     this.ws.send(data);
     return observable;
   }
 
+  /** Waits until the websocket is open */
   open() {
     return rx.firstValueFrom(rx.fromEvent(this.ws, "open", () => {}));
   }
@@ -182,59 +157,69 @@ export class DeviceConnection {
   /** sends the  CONNECT:1 message to the device */
   sendConnect(authKey: string, authKeyID: string) {
     return rx.firstValueFrom(
-      map_result<drmcl.ConnectedMessageLike>(
-        this.sendTD<drmcl.ConnectMessage>(ConnectionEvents.CONNECT, {
-          authKey,
-          authKeyID,
-        })
-      )
+      this.sendTD<drmcl.ConnectMessage>(ConnectionEvents.CONNECT, {
+        authKey,
+        authKeyID,
+      }).pipe(rxu.to_be<drmcl.ConnectedMessageLike>())
     );
   }
 
   /** sends the  AUTHENTICATE:91 message to the device */
   sendAuthenticate(token: string) {
     return rx.firstValueFrom(
-      map_result<drmcl.ConnectedMessageLike>(
-        this.sendTD<drmcl.Authenticate>(ConnectionEvents.AUTHENTICATE, {
-          token,
-        })
-      )
+      this.sendTD<drmcl.Authenticate>(ConnectionEvents.AUTHENTICATE, {
+        token,
+      }).pipe(rxu.to_be<drmcl.ConnectedMessageLike>())
     );
   }
 
   /** sends the SESSION_OPEN:9 message to the device */
   sendOpenSession() {
+    if (!this.connected) throw new Error("Not Connected");
+
     return rx.firstValueFrom(
-      map_empty(this.sendT(ConnectionEvents.SESSION_OPEN))
+      this.sendT(ConnectionEvents.SESSION_OPEN).pipe(rxu.to_be_empty())
     );
   }
 
   /** sends the SESSION_CLOSE:11 message to the device */
   sendCloseSession() {
+    if (!this.connected) throw new Error("Not Connected");
+    if (!this.session) throw new Error("No Session Opened");
+
     return rx.firstValueFrom(
-      map_empty(this.sendT(ConnectionEvents.SESSION_CLOSE))
+      this.sendT(ConnectionEvents.SESSION_CLOSE).pipe(rxu.to_be_empty())
     );
   }
 
   /** sends the CAPTURE_DATA:50 message to the device */
   sendCaptureData() {
+    if (!this.connected) throw new Error("Not Connected");
+    if (!this.session) throw new Error("No Session Opened");
+
     const end = new rx.Subject();
-    let observable = map_unknown(this.sendT(ConnectionEvents.CAPTURE_DATA))
+    let observable = this.sendT(ConnectionEvents.CAPTURE_DATA)
+      // .pipe(to_be_unknown())
       .pipe(
         rx.tap((msg) => {
           if (msg.t == ConnectionEvents.CAPTURED) end.next(null);
         })
       )
       .pipe(rx.filter((msg) => msg.t == ConnectionEvents.CAPTURE_DATA_CAPTURED))
-      .pipe(rx.takeUntil(end));
+      .pipe(rx.takeUntil(end))
+      .pipe(rxu.to_be<drmcl.DataCaptureResultLike>());
 
-    return eachValueFrom(map_result<drmcl.DataCaptureResultLike>(observable));
+    return eachValueFrom(observable);
   }
 
   /** sends the GET_TOKEN:89 message to the device */
   sendGetToken() {
+    if (!this.connected) throw new Error("Not Connected");
+
     return rx.firstValueFrom(
-      map_result<drmcl.TokenMessage>(this.sendT(ConnectionEvents.GET_TOKEN))
+      this.sendT(ConnectionEvents.GET_TOKEN)
+        .pipe(rxu.expect_only(ConnectionEvents.TOKEN))
+        .pipe(rxu.to_be<drmcl.TokenMessage>())
     );
   }
 
@@ -242,26 +227,33 @@ export class DeviceConnection {
   sendSettings(settings: DeviceSettingsLike): void;
   sendSettings(settings: SettingsMessageLike): void;
   sendSettings(settings: DeviceSettingsLike | SettingsMessageLike) {
-    let d: SettingsMessage;
+    if (!this.connected) throw new Error("Not Connected");
+    if (!this.session) throw new Error("No Session Opened");
+
+    let d: SettingsMessage | undefined;
     if (isSettingsMessage(settings)) {
       d = settings;
     } else if (isDeviceSettings(settings)) {
-      d = SettingsMessage.copy({ settings });
+      d = nullToUndefined(SettingsMessage.copy({ settings }));
     } else {
       throw new Error("settings must look like a valid ");
     }
 
     return rx.firstValueFrom(
-      map_empty(this.sendTD(ConnectionEvents.SET_SETTINGS, d))
+      this.sendTD(ConnectionEvents.SET_SETTINGS, d)
+        .pipe(rxu.expect_only(ConnectionEvents.SETTINGS_UPDATED))
+        .pipe(rxu.to_be_empty())
     );
   }
 
   /** sends the GET_SETTINGS:32 message to the device */
   sendGetSettings() {
+    if (!this.connected) throw new Error("Not Connected");
+
     return rx.firstValueFrom(
-      map_result<drmcl.SettingsMessage>(
-        this.sendT(ConnectionEvents.GET_SETTINGS)
-      )
+      this.sendT(ConnectionEvents.GET_SETTINGS)
+        .pipe(rxu.expect_only(ConnectionEvents.RETURNED_SETTINGS))
+        .pipe(rxu.to_be<drmcl.SettingsMessage>())
     );
   }
 
@@ -269,15 +261,18 @@ export class DeviceConnection {
   sendRetrieveData(
     data: drmcl.DataRequestLike
   ): Promise<MessageWrapper<drmcl.DataResponse>> {
+    if (!this.connected) throw new Error("Not Connected");
+    if (!this.session) throw new Error("No Session Opened");
     if (!isDataRequest(data)) {
       throw new Error("type must a valid ReaderDataType");
     }
+
     let d = drmcl.DataRequest.copy(data);
 
     return rx.firstValueFrom(
-      map_result<drmcl.DataResponse>(
-        this.sendTD(ConnectionEvents.RETRIEVE_DATA, d)
-      )
+      this.sendTD(ConnectionEvents.RETRIEVE_DATA, d)
+        .pipe(rxu.expect_only(ConnectionEvents.RETURNED_DATA))
+        .pipe(rxu.to_be<drmcl.DataResponse>())
     );
   }
 }
