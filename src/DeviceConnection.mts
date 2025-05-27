@@ -275,4 +275,34 @@ export class DeviceConnection {
         .pipe(rxu.to_be<drmcl.DataResponse>())
     );
   }
+
+  /** Sends the LISTEN_START:42 command */
+  sendListenEvents() {
+    if (!this.connected) throw new Error("Not Connected");
+    if (!this.session) throw new Error("No Session Opened");
+
+    return rx.firstValueFrom(
+      this.sendT(ConnectionEvents.LISTEN_START)
+        .pipe(rxu.expect_only(ConnectionEvents.LISTEN_STARTED))
+        .pipe(rxu.to_be_empty())
+    );
+  }
+
+  /** Sends the LISTEN_STOP:43 command */
+  sendStopListenEvents() {
+    if (!this.connected) throw new Error("Not Connected");
+    if (!this.session) throw new Error("No Session Opened");
+
+    return rx.firstValueFrom(
+      this.sendT(ConnectionEvents.LISTEN_STOP)
+        .pipe(rxu.expect_only(ConnectionEvents.LISTEN_STOPPED))
+        .pipe(rxu.to_be_empty())
+    );
+  }
+
+  observerEvents() {
+    return this.messages
+      .pipe(rx.filter((x) => x.t === ConnectionEvents.EVENT))
+      .pipe(rx.map((x) => x.d.eventId as drmcl.EventCodes)); // extract just the eventId
+  }
 }
